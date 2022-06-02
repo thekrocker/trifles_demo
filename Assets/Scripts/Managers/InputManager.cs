@@ -6,9 +6,12 @@ public class InputManager : MonoBehaviour
 {
     public static InputManager Instance;
 
+    [SerializeField] private float swipeDeadzone = 50f;
+    
 
     #region PublicProperties // Public properties
-
+    public bool SwipeLeft { get; private set; }
+    public bool SwipeRight { get; private set; }
     public Vector2 TouchPosition { get; set; }
     public bool Tap { get; private set; }
 
@@ -18,8 +21,6 @@ public class InputManager : MonoBehaviour
     #region Privates
 
     private Vector2 _startDrag;
-    private bool _swipeLeft;
-    private bool _swipeRight;
 
     #endregion
 
@@ -39,14 +40,12 @@ public class InputManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        throw new NotImplementedException();
+        ResetInputs();
     }
 
     private void ResetInputs()
     {
-        Tap = false;
-        _swipeLeft = false;
-        _swipeRight = false;
+        Tap = SwipeLeft = SwipeRight = false;
     }
 
     private void SetInput()
@@ -62,21 +61,42 @@ public class InputManager : MonoBehaviour
 
     private void OnTap(InputAction.CallbackContext context)
     {
-        throw new NotImplementedException();
+        Tap = true;
     }
 
     private void OnStartDrag(InputAction.CallbackContext context)
     {
-        throw new NotImplementedException();
+        _startDrag = TouchPosition;
     }
 
     private void OnEndDrag(InputAction.CallbackContext context)
     {
-        throw new NotImplementedException();
+        Vector2 delta = TouchPosition - _startDrag;
+        float sqrDistance = delta.sqrMagnitude;
+
+        if (sqrDistance > swipeDeadzone) // swiped enough
+        {
+            float x = Mathf.Abs(delta.x);
+            float y = Mathf.Abs(delta.y); // might delete this later
+
+            if (x > y) // left or right
+            {
+                if (delta.x > 0)
+                {
+                    SwipeRight = true;
+                }
+                else
+                {
+                    SwipeLeft = true;
+                }
+            }
+        }
+
+        _startDrag = Vector2.zero; // Reset drag value
     }
 
     private void OnPosition(InputAction.CallbackContext context)
     {
-        throw new NotImplementedException();
+        TouchPosition = context.ReadValue<Vector2>();
     }
 }
