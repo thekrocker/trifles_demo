@@ -9,7 +9,7 @@ public class InputManager : MonoBehaviour
     [SerializeField] private float swipeDeadzone = 50f;
     
 
-    #region PublicProperties // Public properties
+    #region Public Properties // Public properties
     public bool SwipeLeft { get; private set; }
     public bool SwipeRight { get; private set; }
     public Vector2 TouchPosition { get; set; }
