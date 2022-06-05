@@ -1,16 +1,21 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using Game_Props;
 using UnityEngine;
 
 public static class SafaUtility 
 {
-    public static void ShuffleList<T>(this IList<T> list) where T : StackCube
+    
+    public static float DistanceBetweenLanes = 3f;
+    
+    
+    public static void Scale(this Transform target, Vector3 targetValue, float duration, Action OnCompleteAction = null)
     {
-        for (var i = list.Count - 1; i > 1; i--)
+        target.DOScale(targetValue, duration).OnComplete(() =>
         {
-            var j = Random.Range(0, i + 1);
-            (list[j], list[i]) = (list[i], list[j]);
-        }
+            OnCompleteAction?.Invoke();
+        });
     }
 }

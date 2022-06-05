@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerStateMachine : MonoBehaviour
 {
     public PlayerStats playerStats;
-    
+
     public CharacterController Controller { get; set; }
     public Rigidbody Rb { get; set; }
 
@@ -13,12 +13,24 @@ public class PlayerStateMachine : MonoBehaviour
     public int CurrentLane { get; set; } // will hold -1 , 0 , 1 values for snapping
     public bool IsGrounded { get; set; }
 
-    public float distanceBetweenLanes = 3f;
     public float swipeSpeed;
 
+    public bool CanMove { get; set; } = true;
 
     private BaseState _currentState;
 
+
+    private void OnEnable()
+    {
+        EventManager.OnDie += DisableMove;
+        EventManager.OnWin += DisableMove;
+    }
+
+    private void OnDisable()
+    {
+        EventManager.OnDie -= DisableMove;
+        EventManager.OnWin -= DisableMove;
+    }
 
     private void Start()
     {
@@ -35,9 +47,12 @@ public class PlayerStateMachine : MonoBehaviour
 
     private void Update()
     {
+        if (!CanMove) return;
         Tick();
     }
-    
+
+    public void DisableMove() => CanMove = false;
+
     private void Tick()
     {
         MoveVector = _currentState.SetMovement();
@@ -47,9 +62,11 @@ public class PlayerStateMachine : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!CanMove) return;
+
         Rb.MovePosition(transform.position + MoveVector * Time.fixedDeltaTime);
     }
-    
+
 
     public void ChangeLane(int direction)
     {
@@ -60,10 +77,10 @@ public class PlayerStateMachine : MonoBehaviour
     {
         float snapeLaneValue;
 
-        if (Math.Abs(transform.position.x - (CurrentLane * distanceBetweenLanes)) >
+        if (Math.Abs(transform.position.x - (CurrentLane * SafaUtility.DistanceBetweenLanes)) >
             Mathf.Epsilon) // if we are not in same lane 
         {
-            float desiredPosDelta = (CurrentLane * distanceBetweenLanes) - transform.position.x;
+            float desiredPosDelta = (CurrentLane * SafaUtility.DistanceBetweenLanes) - transform.position.x;
             snapeLaneValue = (desiredPosDelta > 0) ? 1 : -1;
             snapeLaneValue *= swipeSpeed;
 

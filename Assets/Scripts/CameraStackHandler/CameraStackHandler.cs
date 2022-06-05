@@ -20,12 +20,12 @@ public class CameraStackHandler : MonoBehaviour
     {
         _initialCamDistance = _cm.GetCinemachineComponent<CinemachineFramingTransposer>().m_CameraDistance;
         
-        StackSystem.Instance.OnStack += SetCamera;
+        EventManager.OnStack += SetCamera;
     }
     
     private void OnDisable()
     {
-        StackSystem.Instance.OnStack -= SetCamera;
+        EventManager.OnStack -= SetCamera;
     }
 
     private float offset = 0.5f;

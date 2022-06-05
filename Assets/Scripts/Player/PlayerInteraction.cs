@@ -11,30 +11,53 @@ public class PlayerInteraction : MonoBehaviour
     [SerializeField] private Transform playerModel;
     [SerializeField] private PlayerStats stats;
 
+    [SerializeField] private float moveVerticalDuration = .2f;
+
+    public bool IsPlayerInArea { get; private set; }
+
+    private float _initialSpeed;
+    private float _boostDuration;
+
+    private void Awake()
+    {
+        stats.moveSpeed = stats.initialSpeed;
+    }
+
+
     private void OnTriggerEnter(Collider other)
+    {
+        SetInteractions(other);
+    }
+
+    private void SetInteractions(Collider other)
     {
         var istackable = other.GetComponent<IStackable>();
         var iGate = other.GetComponent<IGate>();
         var iBoost = other.GetComponent<IBoost>();
+        var iObstacle = other.GetComponent<IObstacle>();
 
-        if (istackable != null)
-        {
-            istackable.Stack(playerModel);
-            SetPlayerPosition();
-        }
-
+        istackable?.Stack(playerModel);
         iGate?.UseGatePower();
-        
         iBoost?.Boost(transform);
+        iBoost?.Boost(stats);
+
+        if (iObstacle != null)
+        {
+            IsPlayerInArea = true;
+            iObstacle?.Interact();
+        }
     }
 
-    public void SetSpeed(float boostSpeed)
+    private void OnTriggerExit(Collider other)
     {
-        stats.moveSpeed = boostSpeed;
+        var iObstacle = other.GetComponent<IObstacle>();
+
+        if (iObstacle != null) IsPlayerInArea = false;
     }
 
-    private void SetPlayerPosition()
+
+    public void SetPlayerPosition(int count, Action act)
     {
-        playerModel.DOMoveY(StackSystem.Instance.CurrentCubeStacks.Count, 0.3f).SetEase(Ease.Linear);
+        playerModel.DOMoveY(count, moveVerticalDuration).SetEase(Ease.Linear).OnComplete(() => { act?.Invoke(); });
     }
 }

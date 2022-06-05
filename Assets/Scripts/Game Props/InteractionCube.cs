@@ -2,9 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class InteractionCube : MonoBehaviour, IStackable
 {
+    private readonly float[] _lanes = { -SafaUtility.DistanceBetweenLanes, 0f, SafaUtility.DistanceBetweenLanes};
+    
     [SerializeField] private ColorPool colorPool;
     [SerializeField] private MeshRenderer cubeRenderer;
     
@@ -15,6 +18,12 @@ public class InteractionCube : MonoBehaviour, IStackable
     {
         SetReferences();
         SetColor();
+        SetXAxis();
+    }
+
+    private void SetXAxis()
+    {
+        transform.position = new Vector3(_lanes[Random.Range(0, _lanes.Length)], transform.position.y, transform.position.z);
     }
 
     private void SetReferences()
@@ -31,6 +40,7 @@ public class InteractionCube : MonoBehaviour, IStackable
     public void Stack(Transform position)
     {
         StackSystem.Instance.AddStack(this, position, CurrentColor);
+
         gameObject.SetActive(false);
     }
 
