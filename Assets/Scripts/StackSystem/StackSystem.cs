@@ -11,14 +11,25 @@ using Random = UnityEngine.Random;
 
 public class StackSystem : MonoBehaviour
 {
-    public List<StackCube> CurrentCubeStacks = new();
+    public List<StackCube> CurrentCubeStacks { get; set; } = new();
 
     [SerializeField] private PlayerInteraction player;
-
     [SerializeField] private StackCube objToSpawn;
 
+    #region private
 
-    public int matchComboCount;
+    private int _matchComboCount;
+    private int _cubeNameIdx;
+    private float _elapsedLavaTime;
+    private float _lavaDamageInterval = .2f;
+    private float _elapsedTime;
+    private float _comboResetThreshold = 10f;
+    private List<StackCube> _orderedList = new List<StackCube>();
+
+    #endregion
+
+
+    private const int MATCH_COUNT = 3;
 
     public static StackSystem Instance;
 
@@ -27,39 +38,38 @@ public class StackSystem : MonoBehaviour
         if (Instance == null) Instance = this;
     }
 
-    private int _cubeNameIdx;
-
 
     public void AddStack(IStackable stackable, Transform playerTransform, Color color)
     {
         Debug.Log("Adding stack...");
         var cubeToAdd = Instantiate(objToSpawn, playerTransform, true);
 
+        // Set cube properties
         _cubeNameIdx++;
         cubeToAdd.name = $"Stacked Cube: {_cubeNameIdx}";
         cubeToAdd.SetColor(color);
 
         CurrentCubeStacks.Add(cubeToAdd);
 
+        // Set cube position on stacking
         var calculatedOffset = CurrentCubeStacks.Count * stackable.GetHeight();
-
         cubeToAdd.transform.position = new Vector3(playerTransform.position.x,
             playerTransform.position.y - calculatedOffset, playerTransform.position.z);
 
 
-        player.SetPlayerPosition(CurrentCubeStacks.Count, SetPositions);
+        // set player posititoning, then cubes 
+        SetPlayerPositioning();
+
+        EventManager.OnStackChange?.Invoke(); // for trail renderer
 
         EventManager.OnStack?.Invoke(CurrentCubeStacks.Count);
+
 
         CheckMatch();
     }
 
-    public const int MATCH_COUNT = 3;
 
-
-    #region Handle
-
-    private void CheckMatch()
+    private void CheckMatch() // TODO: later on MatchSystem class
     {
         if (CurrentCubeStacks.Count <= 0) return;
 
@@ -84,22 +94,19 @@ public class StackSystem : MonoBehaviour
 
         if (count >= MATCH_COUNT)
         {
-            matchComboCount++;
-            
-            if (matchComboCount >= 3)
+            _matchComboCount++;
+
+            if (_matchComboCount >= 3)
             {
                 EventManager.OnCombo?.Invoke();
-                matchComboCount = 0;
+                _matchComboCount = 0;
             }
 
             CountCombo();
-            
             RemoveCubes(i, count);
         }
     }
 
-    private float _elapsedTime;
-    private float _comboResetThreshold = 10f;
 
     private void CountCombo()
     {
@@ -111,28 +118,29 @@ public class StackSystem : MonoBehaviour
         {
             while (_elapsedTime < _comboResetThreshold)
             {
-                if (matchComboCount >= 3)
+                if (_matchComboCount >= 3)
                 {
-                    matchComboCount = 0;
+                    _matchComboCount = 0;
                     yield break;
                 }
 
                 _elapsedTime += Time.deltaTime;
                 yield return null;
             }
-            
         }
     }
 
     private void RemoveCubes(int index, int count)
     {
+        EventManager.OnStackChange?.Invoke();
+
         for (int i = 1; i <= count; i++)
         {
             CurrentCubeStacks[index - i].ScaleDown(.4f);
             CurrentCubeStacks.RemoveAt(index - i);
         }
 
-        player.SetPlayerPosition(CurrentCubeStacks.Count, SetPositions);
+        SetPlayerPositioning();
     }
 
 
@@ -165,21 +173,18 @@ public class StackSystem : MonoBehaviour
 
         Debug.Log("Shuffling..");
 
-        // player.SetPlayerPosition(CurrentCubeStacks.Count, SetPositions);
 
         SetPositions();
     }
-
-    public List<StackCube> orderedList;
 
     public void OrderColors()
     {
         if (CurrentCubeStacks.Count <= 2) return;
 
-        orderedList = CurrentCubeStacks.OrderBy(x => x.CurrentColor.GetHashCode()).ToList();
-        CurrentCubeStacks = orderedList;
+        _orderedList = CurrentCubeStacks.OrderBy(x => x.CurrentColor.GetHashCode()).ToList();
+        CurrentCubeStacks = _orderedList;
 
-        player.SetPlayerPosition(CurrentCubeStacks.Count, SetPositions);
+        SetPlayerPositioning();
     }
 
     public void HandleRegularObstacle(int cost)
@@ -196,18 +201,18 @@ public class StackSystem : MonoBehaviour
             currentCube.transform.SetParent(null);
             currentCube.ScaleDown(1f);
             CurrentCubeStacks.RemoveAt(CurrentCubeStacks.Count - 1);
-            player.SetPlayerPosition(CurrentCubeStacks.Count, SetPositions);
+            SetPlayerPositioning();
         }
+
+        EventManager.OnStackChange?.Invoke();
     }
 
-    private float _elapsedLavaTime;
-    private float _lavaDamageInterval = .2f;
     public void HandleLavaObstacle()
     {
         _elapsedTime = 0f;
 
         StartCoroutine(CO_HandleLavaObstacle());
-        
+
         IEnumerator CO_HandleLavaObstacle()
         {
             while (player.IsPlayerInArea)
@@ -216,24 +221,27 @@ public class StackSystem : MonoBehaviour
 
                 if (_elapsedTime >= _lavaDamageInterval)
                 {
-                    
                     if (CurrentCubeStacks.Count <= 0)
                     {
                         EventManager.OnDie?.Invoke();
                         yield break;
                     }
-                    
+
                     var currentCube = CurrentCubeStacks[^1];
                     currentCube.ScaleDown(1f);
                     CurrentCubeStacks.RemoveAt(CurrentCubeStacks.Count - 1);
-                    player.SetPlayerPosition(CurrentCubeStacks.Count, SetPositions);
+                    SetPlayerPositioning();
                     _elapsedTime = 0f;
+                    EventManager.OnStackChange?.Invoke();
                 }
+
                 yield return null;
             }
         }
-       
+    }
+
+    private void SetPlayerPositioning()
+    {
+        player.SetPlayerPosition(CurrentCubeStacks.Count, SetPositions);
     }
 }
-
-#endregion

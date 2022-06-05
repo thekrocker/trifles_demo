@@ -14,10 +14,15 @@ namespace Game_Props
             GetComponent<MeshRenderer>().material.color = color;
             CurrentColor = color;
         }
-        
+
         public void ScaleDown(float duration)
         {
-            transform.Scale(Vector3.zero,duration ,() => gameObject.SetActive(false));
+            transform.Scale(Vector3.zero, duration, () => gameObject.SetActive(false));
+        }
+
+        public Color GetColor()
+        {
+            return GetComponent<MeshRenderer>().material.color;
         }
     }
 }

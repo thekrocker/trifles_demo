@@ -11,4 +11,6 @@ public static class EventManager
     public static Action OnWin;
     public static Action OnCombo;
 
+    public static Action OnStackChange;
+
 }
