@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5338247004589690060}
   - component: {fileID: 4958232944143141655}
   - component: {fileID: 7700563536721074558}
+  - component: {fileID: 5519677727083350802}
   m_Layer: 0
   m_Name: StackCube
   m_TagString: Untagged
@@ -94,5 +95,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 515c014ffec04fd68d0739fbbd5551ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5519677727083350802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121735497035581962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee61f3d2ba014a4bb9cc1e4c5152c550, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

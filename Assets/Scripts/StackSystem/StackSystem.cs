@@ -18,6 +18,8 @@ public class StackSystem : MonoBehaviour
 
     #region private
 
+    private static ObjectPool<PoolObject> _stackedCubePool;
+
     private int _matchComboCount;
     private int _cubeNameIdx;
     private float _elapsedLavaTime;
@@ -38,22 +40,28 @@ public class StackSystem : MonoBehaviour
         if (Instance == null) Instance = this;
     }
 
+    private void OnEnable()
+    {
+        _stackedCubePool = new ObjectPool<PoolObject>(objToSpawn.gameObject, transform, 50);
+    }
+
 
     public void AddStack(IStackable stackable, Transform playerTransform, Color color)
     {
         Debug.Log("Adding stack...");
-        var cubeToAdd = Instantiate(objToSpawn, playerTransform, true);
-
+        var cubeToAdd = _stackedCubePool.Pull(playerTransform);
+        var cube = cubeToAdd.GetComponent<StackCube>();
+        
         // Set cube properties
         _cubeNameIdx++;
-        cubeToAdd.name = $"Stacked Cube: {_cubeNameIdx}";
-        cubeToAdd.SetColor(color);
+        cube.name = $"Stacked Cube: {_cubeNameIdx}";
+        cube.SetColor(color);
 
-        CurrentCubeStacks.Add(cubeToAdd);
+        CurrentCubeStacks.Add(cube);
 
         // Set cube position on stacking
         var calculatedOffset = CurrentCubeStacks.Count * stackable.GetHeight();
-        cubeToAdd.transform.position = new Vector3(playerTransform.position.x,
+        cube.transform.position = new Vector3(playerTransform.position.x,
             playerTransform.position.y - calculatedOffset, playerTransform.position.z);
 
 

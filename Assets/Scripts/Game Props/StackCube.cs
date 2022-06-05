@@ -9,6 +9,11 @@ namespace Game_Props
         public Color CurrentColor { get; set; }
 
 
+        private void OnEnable()
+        {
+            transform.localScale = Vector3.one;
+        }
+
         public void SetColor(Color color)
         {
             GetComponent<MeshRenderer>().material.color = color;
@@ -23,6 +28,11 @@ namespace Game_Props
         public Color GetColor()
         {
             return GetComponent<MeshRenderer>().material.color;
+        }
+
+        private void OnDisable()
+        {
+            transform.DOKill();
         }
     }
 }
